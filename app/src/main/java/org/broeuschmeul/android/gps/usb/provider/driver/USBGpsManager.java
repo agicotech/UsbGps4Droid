@@ -241,8 +241,8 @@ public class USBGpsManager {
             PrintStream tmpOut2 = null;
 
             tmpIn = new InputStream() {
-                private final byte[] buffer = new byte[512];
-                private final byte[] usbBuffer = new byte[512];
+                private final byte[] buffer = new byte[4096];
+                private final byte[] usbBuffer = new byte[4096];
                 private final byte[] oneByteBuffer = new byte[1];
                 private final ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
                 private final ByteBuffer bufferRead = (ByteBuffer) ByteBuffer.wrap(buffer).limit(0);
@@ -314,7 +314,7 @@ public class USBGpsManager {
                     if ((!bufferRead.hasRemaining()) && (!closed)) {
                         if (debug) Log.i(LOG_TAG, "data read buffer empty " + Arrays.toString(usbBuffer));
 
-                        int n = connection.bulkTransfer(endpointIn, usbBuffer, 512, 5000);
+                        int n = connection.bulkTransfer(endpointIn, usbBuffer, 4096, 2000);
 
                         if (debug) Log.w(LOG_TAG, "data read: nb: " + n + " " + Arrays.toString(usbBuffer));
 
@@ -384,7 +384,7 @@ public class USBGpsManager {
             };
 
             tmpOut = new OutputStream() {
-                private final byte[] buffer = new byte[512];
+                private final byte[] buffer = new byte[4096];
                 private final byte[] oneByteBuffer = new byte[1];
                 private final ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
                 private boolean closed = false;
@@ -481,7 +481,7 @@ public class USBGpsManager {
                 return;
             }
 
-            final int[] speedList = {Integer.parseInt(deviceSpeed), 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200};
+            final int[] speedList = {Integer.parseInt(deviceSpeed), 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800};
             final byte[] data = {(byte) 0xC0, 0x12, 0x00, 0x00, 0x00, 0x00, 0x08};
             final ByteBuffer connectionSpeedBuffer = ByteBuffer.wrap(data, 0, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
             final byte[] datax = new byte[7];
@@ -575,7 +575,7 @@ public class USBGpsManager {
 
         public void run() {
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in, "US-ASCII"), 512);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in, "US-ASCII"), 4096);
 
                 // Sentence to read from the device
                 String s;
