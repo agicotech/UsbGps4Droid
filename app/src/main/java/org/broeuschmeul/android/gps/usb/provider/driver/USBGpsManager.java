@@ -1384,7 +1384,7 @@ public class USBGpsManager {
     }
 
     private void log(String message) {
-   //     if (debug)
+        if (debug)
             Log.d(LOG_TAG, message);
     }
 
