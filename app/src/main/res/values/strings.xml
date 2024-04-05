@@ -40,54 +40,12 @@
     <string name="pref_mock_gps_name_summary">Usb GPS name: %s</string>
     <string name="pref_connection_retries_title">Connection retry number</string>
     <string name="pref_connection_retries_summary">Number of attempts before exiting: %s</string>
-    <string name="pref_recording_title">Enable/Disable NMEA log</string>
-    <string name="pref_recording_summary">Record the USB GPS Location data</string>
-    <string name="pref_recording_params_title">Recording parameters</string>
-    <string name="pref_trackfile_prefix_title">Trackfiles prefix</string>
-    <string name="pref_trackfile_prefix_summary">Select the prefix for the track files</string>
-    <string name="pref_trackfile_directory_title">Trackfiles directory</string>
-    <string name="pref_trackfile_directory_summary">Select the directory for the track files</string>
     <string name="pref_gps_device_title">Choose Usb GPS</string>
     <string name="pref_gps_device_summary">"Current device: %s"</string>
     <string name="pref_gps_device_speed_title">Choose GPS device speed</string>
     <string name="pref_gps_device_speed_summary">"Current speed: %s"</string>
     <string name="pref_about_title">About</string>
     <string name="pref_about_summary"></string>
-
-    <string name="pref_sirf_gps_title">SiRF GPS</string>
-    <string name="pref_sirf_gps_summary">Enable SiRF Options</string>
-    <string name="pref_sirf_nmea_category_title">Choice of NMEA sentences</string>
-    <string name="pref_sirf_gps_category_title">GPS operation</string>
-    <string name="pref_enable_gga_title">Enable NMEA GGA</string>
-    <string name="pref_enable_gga_summary_off">NMEA GGA sentences are off</string>
-    <string name="pref_enable_gga_summary_on">NMEA GGA sentences are on</string>
-    <string name="pref_enable_rmc_title">Enable NMEA RMC</string>
-    <string name="pref_enable_rmc_summary_off">NMEA RMC sentences are off</string>
-    <string name="pref_enable_rmc_summary_on">NMEA RMC sentences are on</string>
-    <string name="pref_enable_gll_title">Enable NMEA GLL</string>
-    <string name="pref_enable_gll_summary_off">NMEA GLL sentences are off</string>
-    <string name="pref_enable_gll_summary_on">NMEA GLL sentences are on</string>
-    <string name="pref_enable_vtg_title">Enable NMEA VTG</string>
-    <string name="pref_enable_vtg_summary_off">NMEA VTG sentences are off</string>
-    <string name="pref_enable_vtg_summary_on">NMEA VTG sentences are on</string>
-    <string name="pref_enable_gsa_title">Enable NMEA GSA</string>
-    <string name="pref_enable_gsa_summary_off">NMEA GSA sentences are off</string>
-    <string name="pref_enable_gsa_summary_on">NMEA GSA sentences are on</string>
-    <string name="pref_enable_gsv_title">Enable NMEA GSV</string>
-    <string name="pref_enable_gsv_summary_off">NMEA GSV sentences are off</string>
-    <string name="pref_enable_gsv_summary_on">NMEA GSV sentences are on</string>
-    <string name="pref_enable_zda_title">Enable NMEA ZDA</string>
-    <string name="pref_enable_zda_summary_off">NMEA ZDA sentences are off</string>
-    <string name="pref_enable_zda_summary_on">NMEA ZDA sentences are on</string>
-    <string name="pref_enable_sbas_title">SBAS (WAAS/EGNOS)</string>
-    <string name="pref_enable_sbas_summary_off">SBAS is off</string>
-    <string name="pref_enable_sbas_summary_on">SBAS is on</string>
-    <string name="pref_enable_nmea_title">NMEA/Binary mode</string>
-    <string name="pref_enable_nmea_summary_off">Binary mode is on</string>
-    <string name="pref_enable_nmea_summary_on">NMEA mode is on</string>
-    <string name="pref_enable_static_navigation_title">Static Navigation</string>
-    <string name="pref_enable_static_navigation_summary_off">Static Navigation disabled</string>
-    <string name="pref_enable_static_navigation_summary_on">Static Navigation enabled</string>
 
     <string name="msg_gps_provider_started">Usb GPS... started</string>
     <string name="msg_gps_provider_stopped">Usb GPS... stopped</string>
@@ -101,9 +59,6 @@
     <string name="msg_mock_location_disabled_full">Mock locations disabled in settings\nClick here to enable mock locations</string>
     <string name="msg_mock_location_disabled_full_dialog_text">Mock locations disabled in settings\nOpen mock location settings?</string>
     <string name="msg_usb_provider_device_not_connected">Device not connected</string>
-    <string name="msg_nmea_recording_started">GPS NMEA recording... started</string>
-    <string name="msg_nmea_recording_stopped">GPS NMEA recording... stopped</string>
-    <string name="msg_nmea_recording_already_started">GPS track recording... is already on</string>
     <string name="foreground_service_started_notification_title">UsbGps</string>
     <string name="foreground_gps_provider_started_notification">UsbGps service started</string>
     <string name="foreground_nmea_recording_started_notification">UsbGps NMEA recording service started</string>
@@ -143,12 +98,16 @@
         <item>38400</item>
         <item>57600</item>
         <item>115200</item>
+        <item>230400</item>
+        <item>460800</item>
     </string-array>
 
     <string name="title_activity_settings">Usb Gps Settings</string>
 
     <string name="pref_toast_logging_title">Show Toasts</string>
     <string name="pref_toast_logging_summary">Show debug toast messages on USB Gps status changes</string>
+    <string name="pref_notifications_title">Show Notifications</string>
+    <string name="pref_notifications_summary">Show system Notifications on USB Gps status errors</string>
 
     <string name="number_of_satellites_placeholder">Number of satellites: %s</string>
     <string name="accuracy_placeholder">Accuracy: %s</string>

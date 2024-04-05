@@ -24,14 +24,16 @@
 
     <uses-feature android:name="android.hardware.usb.host" />
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
-    <uses-permission
-        android:name="android.permission.ACCESS_MOCK_LOCATION"
-        tools:ignore="MockLocation" />
+    <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION"
+        tools:ignore="MockLocation,ProtectedPermissions" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 
     <application
@@ -41,35 +43,48 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:name=".USBGpsApplication">
-        <receiver
-            android:name=".driver.USBGpsProviderService$BootReceiver"
-            android:enabled="true"
-            android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+        android:name="org.broeuschmeul.android.gps.usb.provider.USBGpsApplication">
+        <receiver android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService$BootReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
             <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
 
         <activity
             android:name=".ui.GpsInfoActivity"
             android:label="@string/info_activity_title"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            tools:ignore="Instantiatable"
+            android:exported="true">
             <intent-filter android:label="@string/app_name">
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
-        <service
-            android:name=".driver.USBGpsProviderService"
-            android:enabled="true"
-            android:exported="true">
+        <service android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService"
+            android:permission="TODO" />
+		<service android:exported="false" android:name="org.broeuschmeul.android.gps.usb.provider.driver.BootService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService"/>
+            </intent-filter>
+            <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config"/>
         </service>
+
+        <activity android:directBootAware="true" android:excludeFromRecents="true" android:exported="true" android:label="Permission popup skip" android:name="org.broeuschmeul.android.gps.usb.provider.ui.UsbEventReceiverActivity" android:noHistory="true" android:process=":UsbEventReceiverActivityProcess" android:taskAffinity="org.broeuschmeul.android.gps.usb.provider.taskAffinityUsbEventReceiver">
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+            </intent-filter>
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter"/>
+        </activity>
 
         <activity
             android:name=".ui.SettingsActivity"
-            android:label="@string/title_activity_settings">
+            android:label="@string/title_activity_settings"
+            tools:ignore="Instantiatable">
         </activity>
     </application>
 

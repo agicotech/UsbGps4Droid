@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.location.Location;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
-import android.support.v7.widget.SwitchCompat;
+import androidx.preference.PreferenceManager;
+import androidx.appcompat.widget.SwitchCompat;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,8 +17,8 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.broeuschmeul.android.gps.nmea.util.NmeaParser;
-import org.broeuschmeul.android.gps.usb.provider.USBGpsApplication;
 import org.broeuschmeul.android.gps.usb.provider.R;
+import org.broeuschmeul.android.gps.usb.provider.USBGpsApplication;
 import org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService;
 
 import java.text.DecimalFormat;
@@ -168,12 +168,7 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
         logText.setText(TextUtils.join("\n", application.getLogLines()));
 
         if (atBottom) {
-            logText.post(new Runnable() {
-                @Override
-                public void run() {
-                    logTextScroller.fullScroll(View.FOCUS_DOWN);
-                }
-            });
+            logText.post(() -> logTextScroller.fullScroll(View.FOCUS_DOWN));
         }
     }
 
@@ -203,10 +198,9 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
-                startActivity(new Intent(this, SettingsActivity.class));
-                return true;
+        if (item.getItemId() == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -223,6 +217,7 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        assert key != null;
         if (key.equals(USBGpsProviderService.PREF_START_GPS_PROVIDER)) {
             updateData();
         }

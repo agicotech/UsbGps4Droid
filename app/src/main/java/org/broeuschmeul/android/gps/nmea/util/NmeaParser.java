@@ -815,10 +815,10 @@ public class NmeaParser {
     }
 
     private void log(String message) {
-        if (BuildConfig.DEBUG) Log.d(LOG_TAG, message);
+        //if (BuildConfig.DEBUG) Log.d(LOG_TAG, message);
     }
 
     private void logError(String message, Exception e) {
-        if (BuildConfig.DEBUG) Log.e(LOG_TAG, message, e);
+        //if (BuildConfig.DEBUG) Log.e(LOG_TAG, message, e);
     }
 }

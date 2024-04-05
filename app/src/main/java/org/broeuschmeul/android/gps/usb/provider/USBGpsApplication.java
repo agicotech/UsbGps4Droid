@@ -5,7 +5,9 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.support.v7.app.AppCompatDelegate;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatDelegate;
 
 import java.util.ArrayList;
 
@@ -38,8 +40,8 @@ public class USBGpsApplication extends Application {
         boolean on = preferences.getBoolean(getString(R.string.pref_daynight_theme_key), false);
 
         AppCompatDelegate.setDefaultNightMode(on ?
-                        AppCompatDelegate.MODE_NIGHT_AUTO:
-                        AppCompatDelegate.MODE_NIGHT_YES
+                AppCompatDelegate.MODE_NIGHT_NO:
+                AppCompatDelegate.MODE_NIGHT_YES
         );
     }
 

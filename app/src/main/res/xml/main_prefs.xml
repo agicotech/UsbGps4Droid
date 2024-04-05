@@ -75,40 +75,13 @@
         android:defaultValue="false"
         />
 
-    <PreferenceCategory
-        android:title="@string/pref_category_sirf_title"
-        />
-    <CheckBoxPreference
-        android:defaultValue="false"
-        android:disableDependentsState="false"
-        android:enabled="true"
-        android:key="@string/pref_sirf_gps_key"
-        android:persistent="true"
-        android:summary="@string/pref_sirf_gps_summary"
-        android:title="@string/pref_sirf_gps_title" />
-
-    <Preference
-        android:dependency="@string/pref_sirf_gps_key"
-        android:orderingFromXml="true"
-        android:shouldDisableView="true"
-        android:title="@string/pref_start_gps_params_title"
-        android:key="@string/pref_sirf_screen_key"
-        />
-
-    <PreferenceCategory
-        android:title="@string/pref_category_nmea_log_title"
-        />
     <SwitchPreference
-        android:enabled="true"
-        android:key="@string/pref_recording_key"
-        android:summary="@string/pref_recording_summary"
-        android:title="@string/pref_recording_title" />
-
-    <Preference
-        android:title="@string/pref_recording_params_title"
-        android:key="@string/pref_recording_screen_key"
-        />
-
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:defaultValue="false"
+        android:key="@string/pref_notifications_key"
+        android:summary="@string/pref_notifications_summary"
+        android:title="@string/pref_notifications_title" />
     <PreferenceCategory
         android:title="@string/pref_category_about_title"
         />

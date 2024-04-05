@@ -12,13 +12,14 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+
+import androidx.annotation.NonNull;
+import androidx.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.preference.PreferenceFragmentCompat;
+import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.preference.PreferenceFragmentCompat;
 import android.view.MenuItem;
 
 import org.broeuschmeul.android.gps.usb.provider.USBGpsApplication;
@@ -52,7 +53,6 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
     private boolean tryingToStart;
 
     private static final int LOCATION_REQUEST = 238472383;
-    private static final int STORAGE_REQUEST = 8972842;
 
     private boolean homeAsUp = false;
 
@@ -71,11 +71,9 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
 
         if (!hasPermission(Manifest.permission.ACCESS_FINE_LOCATION) &&
                 !USBGpsApplication.wasLocationAsked()) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                USBGpsApplication.setLocationAsked();
-                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                        LOCATION_REQUEST);
-            }
+            USBGpsApplication.setLocationAsked();
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_REQUEST);
         }
 
         lastDaynightSetting = getDaynightSetting();
@@ -210,6 +208,7 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
     public void onRequestPermissionsResult(int requestCode,
                                            @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_REQUEST) {
             if (hasPermission(permissions[0])) {
                 if (tryingToStart) {
@@ -234,26 +233,6 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
 
             }
 
-        } else if (requestCode == STORAGE_REQUEST) {
-            if (hasPermission(permissions[0])) {
-                Intent serviceIntent = new Intent(this, USBGpsProviderService.class);
-                serviceIntent.setAction(USBGpsProviderService.ACTION_START_TRACK_RECORDING);
-                startService(serviceIntent);
-
-            } else {
-                sharedPreferences
-                        .edit()
-                        .putBoolean(USBGpsProviderService.PREF_TRACK_RECORDING, false)
-                        .apply();
-
-                new AlertDialog.Builder(this)
-                        .setMessage(
-                                R.string.error_storage_permission_required
-                        )
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-
-            }
         }
     }
 
@@ -292,11 +271,9 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
 
                     } else {
                         // Other wise we need to request for the permission
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            tryingToStart = true;
-                            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                    LOCATION_REQUEST);
-                        }
+                        tryingToStart = true;
+                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                                LOCATION_REQUEST);
                     }
 
                 } else {
@@ -311,44 +288,6 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
                 }
 
                 break;
-            }
-            case USBGpsProviderService.PREF_TRACK_RECORDING: {
-                boolean val = sharedPreferences.getBoolean(key, false);
-
-                if (val) {
-                    if (!hasPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            requestPermissions(new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                                    STORAGE_REQUEST);
-                        }
-                    } else {
-                        if (sharedPreferences.getBoolean(
-                                USBGpsProviderService.PREF_START_GPS_PROVIDER, false)) {
-                            Intent serviceIntent = new Intent(this, USBGpsProviderService.class);
-                            serviceIntent.setAction(USBGpsProviderService.ACTION_START_TRACK_RECORDING);
-                            startService(serviceIntent);
-                        }
-                    }
-
-                } else {
-                    if (sharedPreferences.getBoolean(
-                            USBGpsProviderService.PREF_START_GPS_PROVIDER, false)) {
-                        Intent serviceIntent = new Intent(this, USBGpsProviderService.class);
-                        serviceIntent.setAction(USBGpsProviderService.ACTION_STOP_TRACK_RECORDING);
-                        startService(serviceIntent);
-                    }
-                }
-
-                break;
-            }
-            case USBGpsProviderService.PREF_SIRF_GPS: {
-                if (sharedPreferences.getBoolean(USBGpsProviderService.PREF_START_GPS_PROVIDER, false)) {
-                    if (sharedPreferences.getBoolean(USBGpsProviderService.PREF_SIRF_GPS, false)) {
-                        Intent configIntent = new Intent(this, USBGpsProviderService.class);
-                        configIntent.setAction(USBGpsProviderService.ACTION_CONFIGURE_SIRF_GPS);
-                        startService(configIntent);
-                    }
-                }
             }
         }
     }
@@ -387,10 +326,9 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
-        switch (menuItem.getItemId()) {
-            case android.R.id.home:
-                onBackPressed();
-                return true;
+        if (menuItem.getItemId() == android.R.id.home) {
+            onBackPressed();
+            return true;
         }
         return (super.onOptionsItemSelected(menuItem));
     }
