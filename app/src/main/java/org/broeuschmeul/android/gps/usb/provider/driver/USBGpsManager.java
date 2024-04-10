@@ -52,7 +52,6 @@ import org.broeuschmeul.android.gps.usb.provider.ui.GpsInfoActivity;
 import org.broeuschmeul.android.gps.usb.provider.util.SuperuserManager;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -97,7 +96,8 @@ public class USBGpsManager {
     private static final String LOG_TAG = USBGpsManager.class.getSimpleName();
 
     // Has more connections logs
-    private final boolean debug = false;
+    private final boolean
+            debug = false;
 
     private UsbManager usbManager = null;
     private static final String ACTION_USB_PERMISSION =
@@ -241,8 +241,8 @@ public class USBGpsManager {
             PrintStream tmpOut2 = null;
 
             tmpIn = new InputStream() {
-                private final byte[] buffer = new byte[4096];
-                private final byte[] usbBuffer = new byte[4096];
+                private final byte[] buffer = new byte[256];
+                private final byte[] usbBuffer = new byte[128];
                 private final byte[] oneByteBuffer = new byte[1];
                 private final ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
                 private final ByteBuffer bufferRead = (ByteBuffer) ByteBuffer.wrap(buffer).limit(0);
@@ -303,7 +303,6 @@ public class USBGpsManager {
                 /* (non-Javadoc)
                  * @see java.io.InputStream#read(byte[], int, int)
                  */
-                @SuppressLint("SuspiciousIndentation")
                 @Override
                 public int read(byte[] buffer, int offset, int length)
                         throws IOException {
@@ -314,7 +313,7 @@ public class USBGpsManager {
                     if ((!bufferRead.hasRemaining()) && (!closed)) {
                         if (debug) Log.i(LOG_TAG, "data read buffer empty " + Arrays.toString(usbBuffer));
 
-                        int n = connection.bulkTransfer(endpointIn, usbBuffer, 4096, 2000);
+                        int n = connection.bulkTransfer(endpointIn, usbBuffer, 128, 2000);
 
                         if (debug) Log.w(LOG_TAG, "data read: nb: " + n + " " + Arrays.toString(usbBuffer));
 
@@ -384,7 +383,7 @@ public class USBGpsManager {
             };
 
             tmpOut = new OutputStream() {
-                private final byte[] buffer = new byte[4096];
+                private final byte[] buffer = new byte[256];
                 private final byte[] oneByteBuffer = new byte[1];
                 private final ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
                 private boolean closed = false;
@@ -575,7 +574,7 @@ public class USBGpsManager {
 
         public void run() {
             try {
-                BufferedReader reader = new BufferedReader(new InputStreamReader(in, "US-ASCII"), 4096);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(in, "US-ASCII"), 256);
 
                 // Sentence to read from the device
                 String s;
@@ -607,7 +606,7 @@ public class USBGpsManager {
                         }
                     } else {
                         log("data: not ready " + System.currentTimeMillis());
-                        SystemClock.sleep(200);
+                        SystemClock.sleep(40);
                     }
                 }
                 if (closed) {
@@ -719,7 +718,6 @@ public class USBGpsManager {
      * @param productId
      * @param maxRetries
      */
-    @SuppressLint("LaunchActivityFromNotification")
     public USBGpsManager(Service callingService, int vendorId, int productId, int maxRetries) {
         this.gpsVendorId = vendorId;
         this.gpsProductId = productId;
@@ -751,7 +749,7 @@ public class USBGpsManager {
 
         Intent stopIntent = new Intent(USBGpsProviderService.ACTION_STOP_GPS_PROVIDER);
 
-        @SuppressLint("LaunchActivityFromNotification") PendingIntent stopPendingIntent = PendingIntent.getService(appContext, 0, stopIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent stopPendingIntent = PendingIntent.getService(appContext, 0, stopIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         Intent restartIntent = new Intent(USBGpsProviderService.ACTION_START_GPS_PROVIDER);
         PendingIntent restartPendingIntent = PendingIntent.getService(appContext, 0, restartIntent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
@@ -1127,13 +1125,11 @@ public class USBGpsManager {
                         );
 
             }
-            if(enableNotifications) {
-                Notification serviceStoppedNotification = partialServiceStoppedNotification.build();
-                notificationManager.notify(
-                        R.string.service_closed_because_connection_problem_notification_title,
-                        serviceStoppedNotification
-                );
-            }
+            Notification serviceStoppedNotification = partialServiceStoppedNotification.build();
+            notificationManager.notify(
+                    R.string.service_closed_because_connection_problem_notification_title,
+                    serviceStoppedNotification
+            );
             SharedPreferences.Editor edit = sharedPreferences.edit();
             if (sharedPreferences.getInt(appContext.getString(R.string.pref_disable_reason_key), 0) != getDisableReason()) {
                 edit.putInt(appContext.getString(R.string.pref_disable_reason_key), getDisableReason());
@@ -1291,17 +1287,16 @@ public class USBGpsManager {
      * Sets the system time to the given UTC time value
      * @param time UTC value HHmmss.SSS
      */
-    @SuppressLint("SimpleDateFormat")
     private void setSystemTime(String time) {
         long parseTime = parser.parseNmeaTime(time);
 
         Log.v(LOG_TAG, "What?: " + parseTime);
 
         String timeFormatToybox =
-                new SimpleDateFormat("MMddHHmmyyyy.ss").format(new Date(parseTime));
+                new SimpleDateFormat("MMddHHmmyyyy.ss", Locale.US).format(new Date(parseTime));
 
         String timeFormatToolbox =
-                new SimpleDateFormat("yyyyMMdd.HHmmss").format(new Date(parseTime));
+                new SimpleDateFormat("yyyyMMdd.HHmmss", Locale.US).format(new Date(parseTime));
 
         debugLog("Setting system time to: " + timeFormatToybox);
         SuperuserManager suManager = SuperuserManager.getInstance();
@@ -1363,11 +1358,11 @@ public class USBGpsManager {
             if (recognizedSentence != null) {
                 res = true;
                 log("notifying NMEA sentence: " + recognizedSentence);
-
-                ((USBGpsApplication) appContext).notifyNewSentence(
-                        recognizedSentence.replaceAll("(\\r|\\n)", "")
-                );
-
+                if(enableNotifications) {
+                    ((USBGpsApplication) appContext).notifyNewSentence(
+                            recognizedSentence.replaceAll("(\\r|\\n)", "")
+                    );
+                }
                 synchronized (nmeaListeners) {
                     for (final NmeaListener listener : nmeaListeners) {
                         notificationPool.execute(new Runnable() {
