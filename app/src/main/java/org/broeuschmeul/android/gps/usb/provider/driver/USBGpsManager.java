@@ -242,7 +242,7 @@ public class USBGpsManager {
 
             tmpIn = new InputStream() {
                 private final byte[] buffer = new byte[256];
-                private final byte[] usbBuffer = new byte[128];
+                private final byte[] usbBuffer = new byte[64];
                 private final byte[] oneByteBuffer = new byte[1];
                 private final ByteBuffer bufferWrite = ByteBuffer.wrap(buffer);
                 private final ByteBuffer bufferRead = (ByteBuffer) ByteBuffer.wrap(buffer).limit(0);
@@ -313,7 +313,7 @@ public class USBGpsManager {
                     if ((!bufferRead.hasRemaining()) && (!closed)) {
                         if (debug) Log.i(LOG_TAG, "data read buffer empty " + Arrays.toString(usbBuffer));
 
-                        int n = connection.bulkTransfer(endpointIn, usbBuffer, 128, 2000);
+                        int n = connection.bulkTransfer(endpointIn, usbBuffer, 64, 10000);
 
                         if (debug) Log.w(LOG_TAG, "data read: nb: " + n + " " + Arrays.toString(usbBuffer));
 
@@ -604,9 +604,10 @@ public class USBGpsManager {
                                 notificationManager.cancel(R.string.connection_problem_notification_title);
                             }
                         }
+                        SystemClock.sleep(5);
                     } else {
                         log("data: not ready " + System.currentTimeMillis());
-                        SystemClock.sleep(40);
+                        SystemClock.sleep(100);
                     }
                 }
                 if (closed) {
@@ -707,7 +708,7 @@ public class USBGpsManager {
     private boolean connected = false;
     private boolean setDeviceSpeed = false;
     private String deviceSpeed = "auto";
-    private String defaultDeviceSpeed = "115200";
+    private String defaultDeviceSpeed = "460800";
 
     private int gpsProductId = 424;
     private int gpsVendorId = 5446;
@@ -831,7 +832,7 @@ public class USBGpsManager {
         if (!Objects.equals(getDeviceFromAttached(), device)) {
             return;
         }
-
+        SystemClock.sleep(5000);
         // After 10 seconds we can assume the GPS must have the
         // correct time and so we are ready to assume the GPS can
         // set the correct time
