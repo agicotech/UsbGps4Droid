@@ -155,14 +155,168 @@ public class USBGpsManager {
          */
         private boolean ready = false;
 
+        // ... существующие поля ...
+        private boolean dtrState = true; // Начальное желаемое состояние DTR
+        private boolean rtsState = true; // Начальное желаемое состояние RTS
+
+        // Константы для CH340/CH341
+        private static final int REQTYPE_HOST_TO_DEVICE_VENDOR_DEVICE = 0x40; // UsbConstants.USB_TYPE_VENDOR | UsbConstants.USB_DIR_OUT | UsbConstants.USB_RECIP_DEVICE
+
+        private static final int CH34X_REQ_SERIAL_INIT = 0xA1; // Инициализация чипа
+        private static final int CH34X_REQ_MODEM_CTRL = 0xA4;  // Управление DTR/RTS
+        private static final int CH34X_REQ_WRITE_REG = 0x9A;   // Запись в регистры (для baud, LCR)
+
+        // Биты для команды CH34X_REQ_MODEM_CTRL (0xA4). Значение для value: ~((DTR_BIT << 5) | (RTS_BIT << 6))
+        private static final int CH34X_LCTRL_DTR_ACTIVE_BIT = 1 << 5; // 0x20
+        private static final int CH34X_LCTRL_RTS_ACTIVE_BIT = 1 << 6; // 0x40
+
+        // Константы для установки параметров (пример для CH340, 9600 8N1)
+        private static final int CH34X_BAUD_VALUE_9600_FOR_0x1312 = 0xb282; // Для команды 0x9A, value=0x1312, index=0xb282 (для CH340)
+        // Другие варианты для 9600 на CH340: value=0x2518, index=0x00cf
+
+        private static final int CH34X_LCR_REGISTER_ADDRESS_CH340_PLUS = 0x2727; // Адрес регистра для LCR
+        private static final byte CH34X_LCR_VALUE_8N1 = 0x03; // 8 data bits, No parity, 1 stop bit
+        private static final int CH34X_LCR_INDEX_CH340_PLUS = 0x0000; // Индекс для команды LCR с данными
+
+        private boolean isCh34xDevice = false; // Флаг, что это CH34x
+
         public ConnectedGps(UsbDevice device) {
             this(device, defaultDeviceSpeed);
         }
 
+        // Внутренний метод для применения текущего состояния DTR/RTS
+        private void applyDtrRtsState(int timeoutMs) throws IOException {
+            if (!isCh34xDevice || closed || connection == null) {
+                if (!isCh34xDevice) debugLog("Not a CH34x device, DTR/RTS control via CH34X_REQ_MODEM_CTRL skipped.");
+                else debugLog("applyDtrRtsState: Connection not ready or closed.");
+                return;
+            }
+
+            int modemLinesValue = 0;
+            if (dtrState) {
+                modemLinesValue |= CH34X_LCTRL_DTR_ACTIVE_BIT;
+            }
+            if (rtsState) {
+                modemLinesValue |= CH34X_LCTRL_RTS_ACTIVE_BIT;
+            }
+
+            // Для CH34x значение для controlTransfer инвертируется
+            int ch34xCtrlValue = (~modemLinesValue) & 0xFFFF; // Маска для 16-битного положительного значения
+
+            debugLog(String.format("CH34x: Applying DTR=%b, RTS=%b. Control value=0x%X",
+                    dtrState, rtsState, ch34xCtrlValue));
+
+            int ret = connection.controlTransfer(ConnectedGps.REQTYPE_HOST_TO_DEVICE_VENDOR_DEVICE, CH34X_REQ_MODEM_CTRL,
+                    ch34xCtrlValue, 0x0000, null, 0, timeoutMs);
+
+            if (ret < 0) {
+                // Не будем бросать IOException, чтобы не прерывать все, но залогируем
+                Log.e(LOG_TAG, "CH34x: Failed to set DTR/RTS lines, error: " + ret);
+            } else {
+                debugLog("CH34x: DTR/RTS lines updated successfully.");
+            }
+        }
+
+        // Публичные методы для управления DTR/RTS извне (например, из USBGpsManager)
+        public void setDTR(boolean dtr) {
+            if (this.dtrState == dtr && isCh34xDevice) return; // Не меняем, если состояние то же и это CH34x
+            this.dtrState = dtr;
+            if (isCh34xDevice && !closed && connection != null) {
+                try {
+                    applyDtrRtsState(1000); // Используем стандартный таймаут
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "IOException while setting DTR for CH34x", e);
+                }
+            } else if (!isCh34xDevice){
+                debugLog("setDTR called on non-CH34x device, state cached but not sent.");
+            }
+        }
+
+        public void setRTS(boolean rts) {
+            if (this.rtsState == rts && isCh34xDevice) return;
+            this.rtsState = rts;
+            if (isCh34xDevice && !closed && connection != null) {
+                try {
+                    applyDtrRtsState(1000);
+                } catch (IOException e) {
+                    Log.e(LOG_TAG, "IOException while setting RTS for CH34x", e);
+                }
+            } else if (!isCh34xDevice) {
+                debugLog("setRTS called on non-CH34x device, state cached but not sent.");
+            }
+        }
+
+        private void performCh34xInitialization(int timeoutMs) throws IOException {
+            int ret;
+
+            // 1. Начальная инициализация/рукопожатие (CH34X_REQ_SERIAL_INIT)
+            // Request: 0xA1, Value: 0, Index: 0
+            ret = connection.controlTransfer(ConnectedGps.REQTYPE_HOST_TO_DEVICE_VENDOR_DEVICE, CH34X_REQ_SERIAL_INIT,
+                    0x0000, 0x0000, null, 0, timeoutMs);
+            if (ret < 0) throw new IOException("CH34x init (0xA1) failed: " + ret);
+            debugLog("CH34x init (0xA1) successful.");
+            SystemClock.sleep(50); // Небольшая пауза
+
+            // 2. Установка DTR и RTS
+            // Устанавливаем начальные значения (по умолчанию оба false, измените если нужно)
+            // this.dtrState = true; // Например, если GPS требует DTR high
+            // this.rtsState = true; // Например, если GPS требует RTS high
+            applyDtrRtsState(timeoutMs); // Применяем текущие dtrState и rtsState
+            SystemClock.sleep(50);
+
+            // 3. Установка скорости (Baud Rate)
+            // Для CH340 это делается через CH34X_REQ_WRITE_REG (0x9A)
+            // request=0x9A, value=0x1312 (регистр), index=константа_скорости
+            int baudRateInt;
+            if ("auto".equalsIgnoreCase(deviceSpeed) || deviceSpeed == null) {
+                baudRateInt = 9600; // Дефолтная скорость для "auto" на CH340
+                debugLog("CH34x: 'auto' speed detected, setting to default 9600bps.");
+            } else {
+                try {
+                    baudRateInt = Integer.parseInt(deviceSpeed);
+                } catch (NumberFormatException e) {
+                    Log.w(LOG_TAG, "CH34x: Invalid deviceSpeed '" + deviceSpeed + "', defaulting to 9600bps.");
+                    baudRateInt = 9600;
+                }
+            }
+
+            int ch340BaudConstant;
+            // Эти константы для request=0x9A, value=0x1312, index=ch340BaudConstant
+            switch (baudRateInt) {
+                case 9600:   ch340BaudConstant = CH34X_BAUD_VALUE_9600_FOR_0x1312; break; // 0xb282
+                case 19200:  ch340BaudConstant = 0xd981; break;
+                case 38400:  ch340BaudConstant = 0xec80; break;
+                case 57600:  ch340BaudConstant = 0x96c0; break; // или 0x4640 (уточнить)
+                case 115200: ch340BaudConstant = 0xA3C0; break; // A3C0
+                // Добавьте другие скорости, если они известны для CH340 и этой команды
+                default:
+                    Log.w(LOG_TAG, "CH34x: Baud rate " + baudRateInt + " not directly supported by simplified setup. Using 9600 (0xb282).");
+                    ch340BaudConstant = CH34X_BAUD_VALUE_9600_FOR_0x1312; // 9600
+            }
+
+            ret = connection.controlTransfer(ConnectedGps.REQTYPE_HOST_TO_DEVICE_VENDOR_DEVICE, CH34X_REQ_WRITE_REG,
+                    0x1312, ch340BaudConstant, null, 0, timeoutMs);
+            if (ret < 0) throw new IOException("CH34x set baud rate (0x9A, 0x1312, " + Integer.toHexString(ch340BaudConstant) + ") failed: " + ret);
+            debugLog("CH34x baud rate set to " + baudRateInt + " (constant 0x" + Integer.toHexString(ch340BaudConstant) + ") successful.");
+            SystemClock.sleep(50);
+
+            // 4. Установка параметров линии (LCR: Data bits, Stop bits, Parity)
+            // Для CH340(+): request=0x9A, value=0x2727, index=0x0000, data={LCR_byte, Break_byte}
+            // Устанавливаем 8N1
+            byte[] lcrPayload = new byte[]{CH34X_LCR_VALUE_8N1, (byte) 0x00}; // 8N1, break off
+            ret = connection.controlTransfer(ConnectedGps.REQTYPE_HOST_TO_DEVICE_VENDOR_DEVICE, CH34X_REQ_WRITE_REG,
+                    CH34X_LCR_REGISTER_ADDRESS_CH340_PLUS, CH34X_LCR_INDEX_CH340_PLUS, lcrPayload, lcrPayload.length, timeoutMs);
+            if (ret < 0) throw new IOException("CH34x set LCR (8N1) failed: " + ret);
+            debugLog("CH34x LCR (8N1) set successful.");
+            SystemClock.sleep(50);
+
+            debugLog("CH34x initialization complete.");
+        }
         public ConnectedGps(UsbDevice device, String deviceSpeed) {
             /**
              * GPS bluetooth socket used for communication.
              */
+
             File gpsDev = null;
 
             debugLog("Searching interfaces, found " + String.valueOf(device.getInterfaceCount()));
@@ -224,16 +378,44 @@ public class USBGpsManager {
             }
 
             intf = foundInterface;
-            final int TIMEOUT = 100;
+            final int TIMEOUT = 1000;
             connection = usbManager.openDevice(device);
 
             if (intf != null) {
-
                 debugLog("claiming interface");
-
                 boolean resclaim = connection.claimInterface(intf, true);
-
                 debugLog("data claim " + resclaim);
+
+                if (resclaim) {
+                    // Определяем, является ли это CH34x устройством
+                    // Используем gpsVendorId и gpsProductId из внешнего класса USBGpsManager
+                    if (USBGpsManager.this.gpsVendorId == 0x1A86 &&
+                            (USBGpsManager.this.gpsProductId == 0x7523 || USBGpsManager.this.gpsProductId == 0x5523)) {
+                        isCh34xDevice = true;
+                        debugLog("CH340/CH341 detected. Performing CH34x initialization.");
+                        try {
+                            performCh34xInitialization(TIMEOUT);
+                        } catch (IOException e) {
+                            Log.e(LOG_TAG, "CH34x initialization failed", e);
+                            // Обработка ошибки: закрыть соединение, уведомить пользователя.
+                            // Важно корректно завершить, чтобы не было утечек ресурсов.
+                            close(); // Закрываем ресурсы
+                            // Прерываем дальнейшее создание объекта, т.к. он неработоспособен
+                            throw new RuntimeException("CH34x initialization failed", e);
+                        }
+                    } else {
+                        isCh34xDevice = false;
+                        debugLog("Device is not CH340/CH341, skipping CH34x-specific initialization.");
+                    }
+                } else {
+                    Log.e(LOG_TAG, "Failed to claim USB interface.");
+                    close();
+                    throw new RuntimeException("Failed to claim USB interface.");
+                }
+            } else {
+                Log.e(LOG_TAG, "USB Interface not found.");
+                close(); // Убедитесь, что connection закрывается, если intf null
+                throw new RuntimeException("USB Interface not found.");
             }
 
             InputStream tmpIn = null;
@@ -477,96 +659,125 @@ public class USBGpsManager {
                     Log.e(LOG_TAG, "We couldn't find an endpoint for the device, notifying");
                 disable(R.string.msg_gps_provider_cant_connect);
                 close();
-                return;
+                // throw new RuntimeException("Endpoints not found"); // Прервать, если эндпоинты критичны
+                return; // или return, если конструктор может завершиться без ошибки
             }
+
 
             final int[] speedList = {Integer.parseInt(deviceSpeed), 1200, 2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800};
             final byte[] data = {(byte) 0xC0, 0x12, 0x00, 0x00, 0x00, 0x00, 0x08};
-            final ByteBuffer connectionSpeedBuffer = ByteBuffer.wrap(data, 0, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-            final byte[] datax = new byte[7];
-            final ByteBuffer connectionSpeedInfoBuffer = ByteBuffer.wrap(datax, 0, 7).order(java.nio.ByteOrder.LITTLE_ENDIAN);
-            final int res1 = connection.controlTransfer(0x21, 34, 0, 0, null, 0, TIMEOUT);
+            //final ByteBuffer connectionSpeedBuffer = ByteBuffer.wrap(data, 0, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            //final byte[] datax = new byte[7];
+            //final ByteBuffer connectionSpeedInfoBuffer = ByteBuffer.wrap(datax, 0, 7).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+            //final int res1 = connection.controlTransfer(0x21, 34, 0, 0, null, 0, TIMEOUT);
 
-            if (setDeviceSpeed) {
-                debugLog("Setting connection speed to: " + deviceSpeed);
-                try {
-                    connectionSpeedBuffer.putInt(0, Integer.parseInt(deviceSpeed)); // Put the value in
-                    connection.controlTransfer(0x21, 32, 0, 0, data, 7, TIMEOUT); // Set baudrate
-                } catch (NullPointerException e) {
-                    if (debug)
-                        Log.e(LOG_TAG, "Could not set speed");
-                    close();
-                }
 
-            } else {
-                Thread autoConf = new Thread() {
+            // --- ЛОГИКА УСТАНОВКИ СКОРОСТИ ---
+            // Если это CH34x, скорость уже должна была быть установлена в performCh34xInitialization()
+            // Поэтому старую логику для generic устройств нужно выполнять только если это НЕ CH34x
+            if (!isCh34xDevice) {
+                debugLog("Performing generic device speed setup.");
+                // Ваша существующая логика с controlTransfer(0x21, 34, ...), setDeviceSpeed и autoConf
+                final byte[] dataForSpeed = {(byte) 0xC0, 0x12, 0x00, 0x00, 0x00, 0x00, 0x08}; // Переименовал, чтобы не конфликтовать
+                final ByteBuffer connectionSpeedBuffer = ByteBuffer.wrap(dataForSpeed, 0, 4).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                final byte[] datax = new byte[7];
+                final ByteBuffer connectionSpeedInfoBuffer = ByteBuffer.wrap(datax, 0, 7).order(java.nio.ByteOrder.LITTLE_ENDIAN);
+                final int res1 = connection.controlTransfer(0x21, 34, 0, 0, null, 0, TIMEOUT); // 0x21 - HOST_TO_DEVICE | CLASS | INTERFACE
+                debugLog("Generic device init (0x21,34) result: " + res1);
 
-                    /* (non-Javadoc)
-                     * @see java.lang.Thread#run()
-                     */
-                    @Override
-                    public void run() {
-                        try {
-                            // Get the current data rate from the device and transfer it into datax
-                            int res0 = connection.controlTransfer(0xA1, 33, 0, 0, datax, 7, TIMEOUT);
 
-                            // Datax is used in a byte buffer which this now turns into an integer
-                            // and sets how preference speed to that speed
-                            USBGpsManager.this.deviceSpeed = Integer.toString(connectionSpeedInfoBuffer.getInt(0));
+                if (setDeviceSpeed) { // setDeviceSpeed - поле из USBGpsManager
+                    debugLog("Setting connection speed (generic) to: " + deviceSpeed);
+                    try {
+                        connectionSpeedBuffer.putInt(0, Integer.parseInt(deviceSpeed));
+                        int resSetSpeed = connection.controlTransfer(0x21, 32, 0, 0, dataForSpeed, dataForSpeed.length, TIMEOUT); // 0x21, 0x20 (SET_LINE_CODING)
+                        debugLog("Generic set speed (0x21,32) to " + deviceSpeed + " result: " + resSetSpeed);
+                        if (resSetSpeed < 0) {
+                            Log.e(LOG_TAG, "Could not set speed (generic method)");
+                        }
+                    } catch (NumberFormatException | NullPointerException e) {
+                        Log.e(LOG_TAG, "Could not set speed (generic method)", e);
+                    }
+                } else {
+                    Thread autoConf = new Thread() {
 
-                            // logs the bytes we got
-                            debugLog("info connection: " + Arrays.toString(datax));
-                            debugLog("info connection speed: " + USBGpsManager.this.deviceSpeed);
+                        /* (non-Javadoc)
+                         * @see java.lang.Thread#run()
+                         */
+                        @Override
+                        public void run() {
+                            try {
+                                // Get the current data rate from the device and transfer it into datax
+                                int res0 = connection.controlTransfer(0xA1, 33, 0, 0, datax, 7, TIMEOUT);
 
-                            Thread.sleep(4000);
-                            debugLog("trying to use speed in range: " + Arrays.toString(speedList));
-                            for (int speed: speedList) {
-                                if (!ready && !closed) {
-                                    // set a new datarate
-                                    USBGpsManager.this.deviceSpeed = Integer.toString(speed);
-                                    debugLog("trying to use speed " + speed);
-                                    debugLog("initializing connection:  " + speed + " baud and 8N1 (0 bits no parity 1 stop bit");
+                                // Datax is used in a byte buffer which this now turns into an integer
+                                // and sets how preference speed to that speed
+                                USBGpsManager.this.deviceSpeed = Integer.toString(connectionSpeedInfoBuffer.getInt(0));
 
-                                    // Put that data rate into a new data byte array
-                                    connectionSpeedBuffer.putInt(0, speed);
+                                // logs the bytes we got
+                                debugLog("info connection: " + Arrays.toString(datax));
+                                debugLog("info connection speed: " + USBGpsManager.this.deviceSpeed);
 
-                                    // And set the device to that data rate
-                                    int res2 = connection.controlTransfer(0x21, 32, 0, 0, data, 7, TIMEOUT);
+                                Thread.sleep(4000);
+                                debugLog("trying to use speed in range: " + Arrays.toString(speedList));
+                                for (int speed: speedList) {
+                                    if (!ready && !closed) {
+                                        // set a new datarate
+                                        USBGpsManager.this.deviceSpeed = Integer.toString(speed);
+                                        debugLog("trying to use speed " + speed);
+                                        debugLog("initializing connection:  " + speed + " baud and 8N1 (0 bits no parity 1 stop bit");
 
-                                    debugLog("data init " + res1 + " " + res2);
-                                    Thread.sleep(4000);
+                                        // Put that data rate into a new data byte array
+                                        connectionSpeedBuffer.putInt(0, speed);
+
+                                        // And set the device to that data rate
+                                        int res2 = connection.controlTransfer(0x21, 32, 0, 0, data, 7, TIMEOUT);
+
+                                        debugLog("data init " + res1 + " " + res2);
+                                        Thread.sleep(4000);
+                                    }
+                                }
+                                // And get the current data rate again
+                                res0 = connection.controlTransfer(0xA1, 33, 0, 0, datax, 7, TIMEOUT);
+
+                                debugLog("info connection: " + Arrays.toString(datax));
+                                debugLog("info connection speed: " + connectionSpeedInfoBuffer.getInt(0));
+
+                                if (!closed) {
+                                    Thread.sleep(5000);
+                                }
+                            } catch (InterruptedException e) {
+                                if (debug)
+                                    Log.e(LOG_TAG, "autoconf thread interrupted", e);
+                            } finally {
+                                if ((!closed) && (!ready)){// || (lastRead + 4000 < SystemClock.uptimeMillis())) {
+                                    setMockLocationProviderOutOfService();
+                                    if (debug)
+                                        Log.e(LOG_TAG, "Something went wrong in auto config");
+                                    // cleanly closing everything...
+                                    ConnectedGps.this.close();
+                                    USBGpsManager.this.disableIfNeeded();
                                 }
                             }
-                            // And get the current data rate again
-                            res0 = connection.controlTransfer(0xA1, 33, 0, 0, datax, 7, TIMEOUT);
-
-                            debugLog("info connection: " + Arrays.toString(datax));
-                            debugLog("info connection speed: " + connectionSpeedInfoBuffer.getInt(0));
-
-                            if (!closed) {
-                                Thread.sleep(5000);
-                            }
-                        } catch (InterruptedException e) {
-                            if (debug)
-                                Log.e(LOG_TAG, "autoconf thread interrupted", e);
-                        } finally {
-                            if ((!closed) && (!ready)){// || (lastRead + 4000 < SystemClock.uptimeMillis())) {
-                                setMockLocationProviderOutOfService();
-                                if (debug)
-                                    Log.e(LOG_TAG, "Something went wrong in auto config");
-                                // cleanly closing everything...
-                                ConnectedGps.this.close();
-                                USBGpsManager.this.disableIfNeeded();
-                            }
                         }
-                    }
 
-                };
-                debugLog("trying to find speed");
-                ready = false;
-                autoConf.start();
+                    };
+                    debugLog("trying to find speed");
+                    ready = false;
+                    autoConf.start();
+                }
+            } else {
+                debugLog("CH34x device: Speed and LCR were set during CH34x initialization. Skipping generic speed setup.");
+                // Для CH34x скорость должна быть установлена. Если `deviceSpeed`="auto",
+                // то в `performCh34xInitialization` мы могли бы установить дефолтную (напр. 9600).
+                // Если `deviceSpeed` задан, то мы пытались установить его.
+                // `ready` установится, когда пойдут данные в `run()`.
             }
+
         }
+
+
+
 
         public boolean isReady() {
             return ready;
@@ -779,6 +990,7 @@ public class USBGpsManager {
                 .setContentText(appContext.getString(R.string.service_closed_because_connection_problem_notification));
 
         usbManager = (UsbManager) callingService.getSystemService(Service.USB_SERVICE);
+
 
     }
 

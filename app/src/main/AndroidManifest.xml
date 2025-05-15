@@ -33,6 +33,7 @@
     <uses-permission android:name="android.permission.ACCESS_SUPERUSER" />
     <uses-permission android:name="android.permission.ACCESS_MOCK_LOCATION"
         tools:ignore="MockLocation,ProtectedPermissions" />
+    <uses-permission android:name="android.permission.USB_PERMISSION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 
@@ -52,7 +53,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
         </receiver>
-
         <activity
             android:name=".ui.GpsInfoActivity"
             android:label="@string/info_activity_title"
