@@ -20,7 +20,7 @@
  *  along with UsbGPS4Droid. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.broeuschmeul.android.gps.usb.provider.driver;
+package org.broeuschmeul.android.gps.driver;
 
 import java.util.Objects;
 
@@ -49,9 +49,9 @@ import android.util.Log;
 import android.widget.Toast;
 import androidx.core.app.NotificationCompat;
 
-import org.broeuschmeul.android.gps.usb.provider.R;
-import org.broeuschmeul.android.gps.usb.provider.ui.GpsInfoActivity;
-import org.broeuschmeul.android.gps.usb.provider.ui.USBGpsSettingsFragment;
+import org.broeuschmeul.android.gps.R;
+import org.broeuschmeul.android.gps.ui.GpsInfoActivity;
+import org.broeuschmeul.android.gps.ui.USBGpsSettingsFragment;
 
 /**
  * A Service used to replace Android internal GPS with a USB GPS and/or write GPS NMEA data in a File.
@@ -61,9 +61,9 @@ import org.broeuschmeul.android.gps.usb.provider.ui.USBGpsSettingsFragment;
  */
 public class USBGpsProviderService extends Service implements USBGpsManager.NmeaListener, LocationListener {
     public static final String ACTION_START_GPS_PROVIDER =
-            "org.broeuschmeul.android.gps.usb.provider.action.START_GPS_PROVIDER";
+            "org.broeuschmeul.android.gps.action.START_GPS_PROVIDER";
     public static final String ACTION_STOP_GPS_PROVIDER =
-            "org.broeuschmeul.android.gps.usb.provider.action.STOP_GPS_PROVIDER";
+            "org.broeuschmeul.android.gps.action.STOP_GPS_PROVIDER";
 
     public static final String PREF_START_GPS_PROVIDER = "startGps";
     public static final String PREF_START_ON_BOOT = "startOnBoot";

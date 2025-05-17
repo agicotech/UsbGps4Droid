@@ -1,4 +1,4 @@
-package org.broeuschmeul.android.gps.usb.provider.ui;
+package org.broeuschmeul.android.gps.ui;
 
 import android.Manifest;
 import android.app.ActivityManager;
@@ -22,9 +22,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceFragmentCompat;
 import android.view.MenuItem;
 
-import org.broeuschmeul.android.gps.usb.provider.USBGpsApplication;
-import org.broeuschmeul.android.gps.usb.provider.R;
-import org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService;
+import org.broeuschmeul.android.gps.USBGpsApplication;
+import org.broeuschmeul.android.gps.R;
+import org.broeuschmeul.android.gps.driver.USBGpsProviderService;
 
 /**
  * Created by freshollie on 15/05/17.

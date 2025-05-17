@@ -1,4 +1,4 @@
-package org.broeuschmeul.android.gps.usb.provider.ui;
+package org.broeuschmeul.android.gps.ui;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -17,9 +17,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import org.broeuschmeul.android.gps.nmea.util.NmeaParser;
-import org.broeuschmeul.android.gps.usb.provider.R;
-import org.broeuschmeul.android.gps.usb.provider.USBGpsApplication;
-import org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService;
+import org.broeuschmeul.android.gps.R;
+import org.broeuschmeul.android.gps.USBGpsApplication;
+import org.broeuschmeul.android.gps.driver.USBGpsProviderService;
 
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;

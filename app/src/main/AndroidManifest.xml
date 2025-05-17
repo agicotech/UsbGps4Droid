@@ -20,7 +20,7 @@
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="org.broeuschmeul.android.gps.usb.provider">
+    package="org.broeuschmeul.android.gps">
 
     <uses-feature android:name="android.hardware.usb.host" />
 
@@ -44,8 +44,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/AppTheme"
-        android:name="org.broeuschmeul.android.gps.usb.provider.USBGpsApplication">
-        <receiver android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService$BootReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
+        android:name="org.broeuschmeul.android.gps.USBGpsApplication">
+        <receiver android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.driver.USBGpsProviderService$BootReceiver" android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
             <intent-filter>
                 <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED"/>
             </intent-filter>
@@ -65,16 +65,16 @@
             </intent-filter>
         </activity>
 
-        <service android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService"
+        <service android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.driver.USBGpsProviderService"
             android:permission="TODO" />
-		<service android:exported="false" android:name="org.broeuschmeul.android.gps.usb.provider.driver.BootService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+		<service android:exported="false" android:name="org.broeuschmeul.android.gps.driver.BootService" android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService"/>
             </intent-filter>
             <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config"/>
         </service>
 
-        <activity android:directBootAware="true" android:excludeFromRecents="true" android:exported="true" android:label="Permission popup skip" android:name="org.broeuschmeul.android.gps.usb.provider.ui.UsbEventReceiverActivity" android:noHistory="true" android:process=":UsbEventReceiverActivityProcess" android:taskAffinity="org.broeuschmeul.android.gps.usb.provider.taskAffinityUsbEventReceiver">
+        <activity android:directBootAware="true" android:excludeFromRecents="true" android:exported="true" android:label="Permission popup skip" android:name="org.broeuschmeul.android.gps.ui.UsbEventReceiverActivity" android:noHistory="true" android:process=":UsbEventReceiverActivityProcess" android:taskAffinity="org.broeuschmeul.android.gps.taskAffinityUsbEventReceiver">
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
             </intent-filter>

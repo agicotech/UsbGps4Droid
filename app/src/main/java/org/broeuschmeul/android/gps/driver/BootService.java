@@ -1,4 +1,4 @@
-package org.broeuschmeul.android.gps.usb.provider.driver;
+package org.broeuschmeul.android.gps.driver;
 
 /* loaded from: classes.dex */
 public class BootService extends android.accessibilityservice.AccessibilityService {
@@ -13,7 +13,7 @@ public class BootService extends android.accessibilityservice.AccessibilityServi
     @Override // android.accessibilityservice.AccessibilityService
     protected void onServiceConnected() {
         android.util.Log.i("BootService", "Accessibility service connected");
-        getApplicationContext().startService(new android.content.Intent(getApplicationContext(), org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService.class));
+        getApplicationContext().startService(new android.content.Intent(getApplicationContext(), org.broeuschmeul.android.gps.driver.USBGpsProviderService.class));
     }
 
     @Override // android.app.Service

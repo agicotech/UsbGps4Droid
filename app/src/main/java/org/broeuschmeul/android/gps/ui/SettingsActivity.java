@@ -1,10 +1,10 @@
-package org.broeuschmeul.android.gps.usb.provider.ui;
+package org.broeuschmeul.android.gps.ui;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
 import androidx.appcompat.widget.Toolbar;
 
-import org.broeuschmeul.android.gps.usb.provider.R;
+import org.broeuschmeul.android.gps.R;
 
 import java.util.Objects;
 

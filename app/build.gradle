@@ -1,9 +1,9 @@
 apply plugin: 'com.android.application'
 android {
-    namespace = "org.broeuschmeul.android.gps.usb.provider"
+    namespace = "org.broeuschmeul.android.gps"
     compileSdk 28
     defaultConfig {
-        applicationId "org.broeuschmeul.android.gps.usb.provider"
+        applicationId "org.broeuschmeul.android.gps"
         minSdkVersion 24
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 28

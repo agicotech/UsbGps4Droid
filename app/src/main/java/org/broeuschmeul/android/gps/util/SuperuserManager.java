@@ -1,4 +1,4 @@
-package org.broeuschmeul.android.gps.usb.provider.util;
+package org.broeuschmeul.android.gps.util;
 import android.util.Log;
 
 import java.io.BufferedReader;

@@ -41,8 +41,8 @@ import android.text.TextUtils;
 import android.text.TextUtils.SimpleStringSplitter;
 import android.util.Log;
 
-import org.broeuschmeul.android.gps.usb.provider.BuildConfig;
-import org.broeuschmeul.android.gps.usb.provider.USBGpsApplication;;
+import org.broeuschmeul.android.gps.BuildConfig;
+import org.broeuschmeul.android.gps.USBGpsApplication;;
 
 /**
  * This class is used to parse NMEA sentences an generate the Android Locations when there is a new GPS FIX.

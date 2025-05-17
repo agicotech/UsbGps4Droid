@@ -1,4 +1,4 @@
-package org.broeuschmeul.android.gps.usb.provider.ui;
+package org.broeuschmeul.android.gps.ui;
 
 import android.app.Activity;
 

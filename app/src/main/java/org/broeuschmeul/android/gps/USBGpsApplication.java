@@ -1,4 +1,4 @@
-package org.broeuschmeul.android.gps.usb.provider;
+package org.broeuschmeul.android.gps;
 
 import android.app.Application;
 import android.content.SharedPreferences;

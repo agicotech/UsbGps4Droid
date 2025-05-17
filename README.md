@@ -62,17 +62,17 @@ For now the background service can be manually started with a start service inte
 Intent intent = new Intent();
 intent.setComponent(
 	new Component(
-		"org.broeuschmeul.android.gps.usb.provider",
-		"org.broeuschmeul.android.gps.usb.provider.driver.USBGpsProviderService"
+		"org.broeuschmeul.android.gps",
+		"org.broeuschmeul.android.gps.driver.USBGpsProviderService"
 	)
 )
-intent.setAction("org.broeuschmeul.android.gps.usb.provider.action.START_GPS_PROVIDER")
+intent.setAction("org.broeuschmeul.android.gps.action.START_GPS_PROVIDER")
 ```
 
 Or via a shell command as root.
 
 ```bash
-am startservice -a org.broeuschmeul.android.gps.usb.provider.action.START_GPS_PROVIDER -n org.broeuschmeul.android.gps.usb.provider/.driver.USBGpsProviderService
+am startservice -a org.broeuschmeul.android.gps.action.START_GPS_PROVIDER -n org.broeuschmeul.android.gps/.driver.USBGpsProviderService
 ```
 
 The background service will automatically close itself when the USB device is disconnected for too long.
