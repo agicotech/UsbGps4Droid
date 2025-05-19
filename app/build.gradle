@@ -4,12 +4,12 @@ android {
     compileSdk 28
     defaultConfig {
         applicationId "org.broeuschmeul.android.gps"
-        minSdkVersion 24
+        minSdkVersion 28
         //noinspection ExpiredTargetSdkVersion
         targetSdkVersion 28
 
-        versionCode 199
-        versionName "v2.2.2"
+        versionCode 1488
+        versionName "v2.2.3"
         vectorDrawables.useSupportLibrary = true
 
         setProperty("archivesBaseName", "UsbGps4Droid-$versionName")
