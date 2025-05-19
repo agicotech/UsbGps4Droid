@@ -114,11 +114,16 @@
     <string name="location_placeholder">Location: Lat %1$s, Lon %2$s</string>
     <string name="elevation_placeholder">Altitude: %s</string>
 
-    <string name="info_activity_title">UsbGps - Overview</string>
+    <string name="info_activity_title">UsbGps 🛰️</string>
 
     <string name="pref_start_on_boot_summary_on">Usb Gps service will try and start when android starts</string>
     <string name="pref_start_on_boot_summary_off">Usb Gps service will not try and start when android starts</string>
     <string name="pref_start_on_boot_title">Start service on boot</string>
+
+    <string name="pref_start_on_device_connect_title">Start service on device connect</string>
+    <string name="pref_start_on_device_connect_summary_on">Usb Gps service will try and start when gps receiver is connected</string>
+    <string name="pref_start_on_device_connect_summary_off">Usb Gps service will not try and start when gps receiver is connected</string>
+
 
     <string name="pref_category_device_title">Device</string>
     <string name="pref_category_service_title">Service</string>
@@ -139,6 +144,7 @@
     <string name="error_storage_permission_required">In order to write a track file, the app needs storage permission</string>
     <string name="settings_button_title">Settings</string>
     <string name="pref_start_on_boot_summary">If enabled, the USB GPS service will be automatically started on boot</string>
+    <string name="pref_start_on_device_connect_summary">If enabled, the USB GPS service will be automatically started on device connect</string>
     <string name="pref_set_time_summary">Set the system time from the received GPS time</string>
     <string name="pref_daynight_theme_title">Automatic day-night app theme</string>
     <string name="pref_daynight_theme_summary">Show light theme during daytime and dark theme at night</string>

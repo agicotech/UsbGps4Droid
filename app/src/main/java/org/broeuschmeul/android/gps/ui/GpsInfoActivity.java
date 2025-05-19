@@ -1,8 +1,12 @@
 package org.broeuschmeul.android.gps.ui;
 
+import static org.broeuschmeul.android.gps.driver.USBGpsProviderService.PREF_GPS_DEVICE_PRODUCT_ID;
+import static org.broeuschmeul.android.gps.driver.USBGpsProviderService.PREF_GPS_DEVICE_VENDOR_ID;
+
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -196,17 +200,26 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
 
     }
 
+    void startServiceAndSelectDevice(Intent intent) {
+        UsbDevice device = intent.getParcelableExtra(UsbManager.EXTRA_DEVICE);
+
+        sharedPreferences.edit()
+                .putInt(USBGpsProviderService.PREF_GPS_DEVICE_VENDOR_ID, device.getVendorId())
+                .putInt(USBGpsProviderService.PREF_GPS_DEVICE_PRODUCT_ID, device.getProductId())
+                .putBoolean(USBGpsProviderService.PREF_START_GPS_PROVIDER, true).apply();
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         if (Objects.equals(intent.getAction(), UsbManager.ACTION_USB_DEVICE_ATTACHED)){
+            boolean needToStart = sharedPreferences.getBoolean(USBGpsProviderService.PREF_START_ON_DEVICE_CONNECT, true);
+            if (!needToStart) return;
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    sharedPreferences.edit()
-                            .putBoolean(USBGpsProviderService.PREF_START_GPS_PROVIDER, true)
-                            .apply();
+                    startServiceAndSelectDevice(intent);
                 }
-            }, 100);
+            }, 70);
 
             new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                 @Override
@@ -216,7 +229,7 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
                         finish();
                     }
                 }
-            }, 400);
+            }, 200);
         }
         //Toast.makeText(this, intent.getAction(), Toast.LENGTH_SHORT).show();
     }

@@ -254,40 +254,36 @@ public abstract class USBGpsBaseActivity extends AppCompatActivity implements
      */
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        switch (key) {
-            case USBGpsProviderService.PREF_START_GPS_PROVIDER: {
-                boolean val = sharedPreferences.getBoolean(key, false);
+        if (key.equals(USBGpsProviderService.PREF_START_GPS_PROVIDER)) {
+            boolean val = sharedPreferences.getBoolean(key, false);
 
-                if (val) {
+            if (val) {
 
-                    // If we have location permission then we can start the service
-                    if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
-                        if (!isServiceRunning()) {
-                            Intent serviceIntent = new Intent(this, USBGpsProviderService.class);
-                            serviceIntent.setAction(USBGpsProviderService.ACTION_START_GPS_PROVIDER);
-                            startService(serviceIntent);
-                        }
-
-
-                    } else {
-                        // Other wise we need to request for the permission
-                        tryingToStart = true;
-                        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
-                                LOCATION_REQUEST);
-                    }
-
-                } else {
-                    // Will show a stop dialog if needed
-                    showStopDialog();
-
-                    if (isServiceRunning()) {
+                // If we have location permission then we can start the service
+                if (hasPermission(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    if (!isServiceRunning()) {
                         Intent serviceIntent = new Intent(this, USBGpsProviderService.class);
-                        serviceIntent.setAction(USBGpsProviderService.ACTION_STOP_GPS_PROVIDER);
+                        serviceIntent.setAction(USBGpsProviderService.ACTION_START_GPS_PROVIDER);
                         startService(serviceIntent);
                     }
+
+
+                } else {
+                    // Other wise we need to request for the permission
+                    tryingToStart = true;
+                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            LOCATION_REQUEST);
                 }
 
-                break;
+            } else {
+                // Will show a stop dialog if needed
+                showStopDialog();
+
+                if (isServiceRunning()) {
+                    Intent serviceIntent = new Intent(this, USBGpsProviderService.class);
+                    serviceIntent.setAction(USBGpsProviderService.ACTION_STOP_GPS_PROVIDER);
+                    startService(serviceIntent);
+                }
             }
         }
     }
