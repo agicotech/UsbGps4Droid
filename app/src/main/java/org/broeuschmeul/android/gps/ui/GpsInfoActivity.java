@@ -3,10 +3,13 @@ package org.broeuschmeul.android.gps.ui;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
+import android.hardware.usb.UsbManager;
 import android.location.Location;
 import android.os.Bundle;
 import androidx.preference.PreferenceManager;
 import androidx.appcompat.widget.SwitchCompat;
+
+import android.os.Handler;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -16,6 +19,7 @@ import android.widget.CompoundButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import org.broeuschmeul.android.gps.driver.USBGpsManager;
 import org.broeuschmeul.android.gps.nmea.util.NmeaParser;
 import org.broeuschmeul.android.gps.R;
 import org.broeuschmeul.android.gps.USBGpsApplication;
@@ -25,6 +29,10 @@ import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Objects;
+import android.os.Looper;
+
+import android.widget.Toast;
 
 /**
  * Created by Oliver Bell 5/12/15
@@ -72,6 +80,10 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
         if (isDoublePanel()) {
             showSettingsFragment(R.id.settings_holder, false);
         }
+
+        Intent intent = getIntent();
+        onNewIntent(intent);
+
     }
 
     private void setupUI() {
@@ -178,6 +190,35 @@ public class GpsInfoActivity extends USBGpsBaseActivity implements
         sharedPreferences.registerOnSharedPreferenceChangeListener(this);
         ((USBGpsApplication) getApplication()).registerServiceDataListener(this);
         super.onResume();
+
+        Intent intent = getIntent();
+        onNewIntent(intent);
+
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        if (Objects.equals(intent.getAction(), UsbManager.ACTION_USB_DEVICE_ATTACHED)){
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    sharedPreferences.edit()
+                            .putBoolean(USBGpsProviderService.PREF_START_GPS_PROVIDER, true)
+                            .apply();
+                }
+            }, 100);
+
+            new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    // Проверяем, не была ли Activity уже закрыта или уничтожена
+                    if (!isFinishing() && !isDestroyed()) {
+                        finish();
+                    }
+                }
+            }, 400);
+        }
+        //Toast.makeText(this, intent.getAction(), Toast.LENGTH_SHORT).show();
     }
 
     @Override

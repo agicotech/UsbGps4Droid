@@ -63,6 +63,10 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
+            </intent-filter>
+            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter"/>
         </activity>
 
         <service android:enabled="true" android:exported="true" android:name="org.broeuschmeul.android.gps.driver.USBGpsProviderService"
@@ -74,12 +78,6 @@
             <meta-data android:name="android.accessibilityservice" android:resource="@xml/accessibility_service_config"/>
         </service>
 
-        <activity android:directBootAware="true" android:excludeFromRecents="true" android:exported="true" android:label="Permission popup skip" android:name="org.broeuschmeul.android.gps.ui.UsbEventReceiverActivity" android:noHistory="true" android:process=":UsbEventReceiverActivityProcess" android:taskAffinity="org.broeuschmeul.android.gps.taskAffinityUsbEventReceiver">
-            <intent-filter>
-                <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"/>
-            </intent-filter>
-            <meta-data android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" android:resource="@xml/device_filter"/>
-        </activity>
 
         <activity
             android:name=".ui.SettingsActivity"
